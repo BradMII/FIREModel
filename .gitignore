@@ -13,3 +13,8 @@
 
 #the binary for this project
 FIREModel
+
+#input files
+accounts.json
+events.json
+values.json

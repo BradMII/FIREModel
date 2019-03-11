@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"time"
 	"github.com/teambition/rrule-go"
+	"strconv"
 )
 
 type WorthEvent struct {
 	Name string
 	ValueType string
+	StaticAccountValues map[string]int
 	StaticValues map[string]int
 	MarginalDependentValues struct {
 		DependencyName string
@@ -37,7 +39,7 @@ type Value struct {
 
 
 func main(){
-	fileContents, err := ioutil.ReadFile("events.txt")
+	fileContents, err := ioutil.ReadFile("events.json")
 	if err != nil {
 		fmt.Println("File Reading Error",err)
 		return
@@ -45,7 +47,7 @@ func main(){
 	events := make([]WorthEvent,0)
 	json.Unmarshal(fileContents,&events)
 
-	fileContents, err = ioutil.ReadFile("accounts.txt")
+	fileContents, err = ioutil.ReadFile("accounts.json")
 	if err != nil {
 		fmt.Println("File Reading Error",err)
 		return
@@ -53,7 +55,7 @@ func main(){
 	accounts := make([]Account,0)
 	json.Unmarshal(fileContents,&accounts)
 
-	fileContents, err = ioutil.ReadFile("values.txt")
+	fileContents, err = ioutil.ReadFile("values.json")
 	if err != nil {
 		fmt.Println("File Reading Error",err)
 		return
@@ -62,13 +64,15 @@ func main(){
 	json.Unmarshal(fileContents,&values)
 
 	startDate := time.Date(2018, time.November, 18, 0, 0, 0, 0, time.UTC)
-	endDate := time.Date(2020, time.November, 18, 0, 0, 0, 0, time.UTC)
+	endDate := time.Date(2100, time.November, 18, 0, 0, 0, 0, time.UTC)
 
 	value := parseEvents(startDate,endDate,events,accounts,values)
 
 	for accountName, worth := range value {
-		fmt.Println(accountName)
-		fmt.Println(worth)
+		fmt.Println(accountName+"[")
+		for i:=0; i < len(worth); i=i+365 {
+			fmt.Print(strconv.Itoa(worth[i])+",")
+		}
 	}
 }
 
@@ -111,13 +115,12 @@ func parseEvents(firstDay time.Time, lastDay time.Time, events []WorthEvent, acc
 					var valueInMargin int
 					if dependentValue > marginalRate.Cutoff {
 						valueInMargin = marginalRate.Cutoff - priorCutoff
-					}else{
+					}else if dependentValue > priorCutoff {
 						valueInMargin = dependentValue - priorCutoff
+					}else{
+						valueInMargin = 0
 					}
 					priorCutoff = marginalRate.Cutoff
-					fmt.Println(valueInMargin)
-					fmt.Println(dependentValue)
-					fmt.Println(marginalRate.Cutoff)
 					accountDelta[valueInfo.AccountName][dayOffset]+=int(marginalRate.Rate*float32(valueInMargin))
 				}
 			}

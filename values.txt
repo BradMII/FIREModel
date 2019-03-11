@@ -1,4 +1,0 @@
-[{
-	"Name":"TaxableIncome",
-	"StartValue":23000
-}]

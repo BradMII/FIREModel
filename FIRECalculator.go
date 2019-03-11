@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"encoding/json"
+	"math"
 	"time"
 	"github.com/teambition/rrule-go"
 	"strconv"
@@ -22,6 +23,10 @@ type WorthEvent struct {
 			Cutoff int
 			Rate float32
 		}
+	}
+	AnnualBumpValues struct {
+		BaseValues map[string]int
+		AnnualBump float64
 	}
 	TaxableValue int
 	RRULE string
@@ -105,6 +110,12 @@ func parseEvents(firstDay time.Time, lastDay time.Time, events []WorthEvent, acc
 			switch event.ValueType {
 			case "Static":
 				for accountName, value := range event.StaticValues {
+					accountDelta[accountName][dayOffset]+=value
+				}
+			case "AnnualBump":
+				for accountName, value := range event.AnnualBumpValues.BaseValues {
+					yearOffset := occurance.Year()-startYear
+					value = int(float64(value)*math.Pow(event.AnnualBumpValues.AnnualBump,float64(yearOffset)))
 					accountDelta[accountName][dayOffset]+=value
 				}
 			case "MarginalDependent":
